@@ -1,0 +1,21 @@
+<div id="<%= dom_id(campaign, :stats) %>" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="text-sm font-medium text-gray-500">Total Sent</div>
+    <div class="mt-2 text-3xl font-bold text-gray-900"><%= stats[:total_sent] %></div>
+  </div>
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="text-sm font-medium text-gray-500">Delivered</div>
+    <div class="mt-2 text-3xl font-bold text-green-600"><%= stats[:delivered] %></div>
+    <div class="text-sm text-gray-500"><%= stats[:total_sent] > 0 ? "#{((stats[:delivered].to_f / stats[:total_sent]) * 100).round(1)}%" : "0%" %></div>
+  </div>
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="text-sm font-medium text-gray-500">Opened</div>
+    <div class="mt-2 text-3xl font-bold text-blue-600"><%= stats[:opened] %></div>
+    <div class="text-sm text-gray-500"><%= stats[:delivered] > 0 ? "#{((stats[:opened].to_f / stats[:delivered]) * 100).round(1)}%" : "0%" %> open rate</div>
+  </div>
+  <div class="bg-white shadow rounded-lg p-6">
+    <div class="text-sm font-medium text-gray-500">Clicked</div>
+    <div class="mt-2 text-3xl font-bold text-purple-600"><%= stats[:clicked] %></div>
+    <div class="text-sm text-gray-500"><%= stats[:delivered] > 0 ? "#{((stats[:clicked].to_f / stats[:delivered]) * 100).round(1)}%" : "0%" %> click rate</div>
+  </div>
+</div>

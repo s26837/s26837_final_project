@@ -1,0 +1,301 @@
+<div class="max-w-7xl mx-auto py-8 px-4">
+  <div class="mb-6">
+    <%= link_to "← Back to Contacts", organization_contacts_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <div class="flex justify-between items-start">
+      <div class="flex-1">
+        <h1 class="text-3xl font-bold text-gray-900"><%= @contact.full_name %></h1>
+        <p class="text-lg text-gray-600 mt-1"><%= @contact.email %></p>
+        <p class="text-sm text-gray-500 mt-2">Added <%= @contact.created_at.strftime("%B %d, %Y") %></p>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "Edit", edit_organization_contact_path(@organization, @contact), class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= button_to "Delete", organization_contact_path(@organization, @contact), method: :delete, form: { data: { turbo_confirm: "Are you sure?" } }, class: "px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="space-y-6">
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-medium text-gray-900">Tags</h2>
+          <button onclick="openTagModal()" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+            Manage Tags
+          </button>
+        </div>
+        <div class="space-y-2">
+          <% @contact.tags.each do |tag| %>
+            <div><%= tag_badge(tag) %></div>
+          <% end %>
+          <% if @contact.tags.empty? %>
+            <p class="text-sm text-gray-500">No tags yet. Click "Manage Tags" to add some.</p>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="lg:col-span-2">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Email Activity History</h2>
+
+        <%= turbo_stream_from "contact_#{@contact.id}" %>
+        <%= render "email_activity", contact: @contact, email_events: @email_events %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tagModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-medium text-gray-900">Manage Tags</h3>
+      <button onclick="closeTagModal()" class="text-gray-400 hover:text-gray-500">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-sm font-medium text-gray-700">Apply Tags to Contact</h4>
+        </div>
+        <p class="text-xs text-gray-500 mb-3">Click to toggle tags on this contact</p>
+
+        <div id="tagsList" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+          <% @organization.tags.order(:name).each do |tag| %>
+            <% is_applied = @contact.tags.include?(tag) %>
+            <div class="tag-item flex items-center justify-between px-3 py-2 rounded-lg border-2 transition-all <%= is_applied ? 'border-indigo-500 shadow-sm' : 'border-gray-200' %>"
+                 style="background-color: <%= tag.color ? "#{tag.color}15" : '#F9FAFB' %>;"
+                 data-tag-id="<%= tag.id %>">
+              <button
+                onclick="toggleTag(<%= tag.id %>, this)"
+                class="flex-1 flex items-center gap-3 text-left">
+                <div class="w-4 h-4 rounded-full border-2 <%= is_applied ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300' %> tag-checkbox">
+                  <% if is_applied %>
+                    <svg class="w-full h-full text-white" fill="currentColor" viewBox="0 0 12 12">
+                      <path d="M10 3L4.5 8.5L2 6"/>
+                    </svg>
+                  <% end %>
+                </div>
+                <div class="flex items-center gap-2 flex-1">
+                  <div class="w-3 h-3 rounded" style="background-color: <%= tag.color || '#E5E7EB' %>;"></div>
+                  <span class="text-sm font-medium text-gray-900 tag-name"><%= tag.name %></span>
+                </div>
+              </button>
+              <button onclick="editTag(<%= tag.id %>, '<%= tag.name.gsub("'", "\\'") %>', '<%= tag.color %>')" class="ml-2 text-gray-400 hover:text-indigo-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                </svg>
+              </button>
+              <button onclick="deleteTag(<%= tag.id %>, '<%= tag.name.gsub("'", "\\'") %>')" class="ml-1 text-gray-400 hover:text-red-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          <% end %>
+          <% if @organization.tags.empty? %>
+            <p class="text-sm text-gray-500 text-center py-4">No tags yet. Create one!</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-3" id="tagFormTitle">Create New Tag</h4>
+
+        <form id="tagForm" class="space-y-4">
+          <input type="hidden" id="tagFormId" value="">
+
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Tag Name</label>
+            <input type="text" id="tagFormName" placeholder="e.g., VIP, Hot Lead"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Color</label>
+            <div class="flex gap-2 items-center">
+              <input type="color" id="tagFormColor" value="#4F46E5"
+                     class="h-10 w-20 rounded border border-gray-300 cursor-pointer">
+              <span class="text-xs text-gray-500">Choose a color</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2 flex-wrap">
+            <% ['#4F46E5', '#DC2626', '#059669', '#D97706', '#7C3AED', '#DB2777', '#2563EB', '#65A30D'].each do |color| %>
+              <button type="button" onclick="document.getElementById('tagFormColor').value='<%= color %>'"
+                      class="w-8 h-8 rounded border-2 border-gray-300 hover:border-gray-500"
+                      style="background-color: <%= color %>;"></button>
+            <% end %>
+          </div>
+
+          <div class="flex gap-2">
+            <button type="submit" id="tagFormSubmit"
+                    class="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+              Create Tag
+            </button>
+            <button type="button" onclick="resetTagForm()" id="tagFormCancel"
+                    class="hidden px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="mt-4 pt-4 border-t border-gray-200">
+      <button onclick="closeTagModal()" class="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openTagModal() {
+    document.getElementById('tagModal').classList.remove('hidden');
+  }
+
+  function closeTagModal() {
+    document.getElementById('tagModal').classList.add('hidden');
+    resetTagForm();
+  }
+
+  function toggleTag(tagId, button) {
+    const tagItem = button.closest('.tag-item');
+    const checkbox = tagItem.querySelector('.tag-checkbox');
+    const isApplied = checkbox.classList.contains('bg-indigo-600');
+
+    const url = isApplied
+      ? `<%= organization_contact_path(@organization, @contact) %>/remove_tag?tag_id=${tagId}`
+      : `<%= organization_contact_path(@organization, @contact) %>/add_tag`;
+
+    const method = isApplied ? 'DELETE' : 'POST';
+    const formData = new FormData();
+    if (!isApplied) formData.append('tag_id', tagId);
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      },
+      body: method === 'POST' ? formData : null
+    })
+    .then(response => {
+      if (response.ok) {
+        if (isApplied) {
+          tagItem.classList.remove('border-indigo-500', 'shadow-sm');
+          tagItem.classList.add('border-gray-200');
+          checkbox.classList.remove('bg-indigo-600', 'border-indigo-600');
+          checkbox.classList.add('border-gray-300');
+          checkbox.innerHTML = '';
+        } else {
+          tagItem.classList.add('border-indigo-500', 'shadow-sm');
+          tagItem.classList.remove('border-gray-200');
+          checkbox.classList.add('bg-indigo-600', 'border-indigo-600');
+          checkbox.classList.remove('border-gray-300');
+          checkbox.innerHTML = '<svg class="w-full h-full text-white" fill="currentColor" viewBox="0 0 12 12"><path d="M10 3L4.5 8.5L2 6"/></svg>';
+        }
+
+        setTimeout(() => window.location.reload(), 500);
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to update tag. Please try again.');
+    });
+  }
+
+  function editTag(tagId, tagName, tagColor) {
+    document.getElementById('tagFormId').value = tagId;
+    document.getElementById('tagFormName').value = tagName;
+    document.getElementById('tagFormColor').value = tagColor || '#4F46E5';
+    document.getElementById('tagFormTitle').textContent = 'Edit Tag';
+    document.getElementById('tagFormSubmit').textContent = 'Update Tag';
+    document.getElementById('tagFormCancel').classList.remove('hidden');
+  }
+
+  function deleteTag(tagId, tagName) {
+    if (!confirm(`Are you sure you want to delete the tag "${tagName}"? This will remove it from all contacts.`)) {
+      return;
+    }
+
+    fetch(`<%= organization_tags_path(@organization) %>/${tagId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('Failed to delete tag. Please try again.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to delete tag. Please try again.');
+    });
+  }
+
+  function resetTagForm() {
+    document.getElementById('tagFormId').value = '';
+    document.getElementById('tagFormName').value = '';
+    document.getElementById('tagFormColor').value = '#4F46E5';
+    document.getElementById('tagFormTitle').textContent = 'Create New Tag';
+    document.getElementById('tagFormSubmit').textContent = 'Create Tag';
+    document.getElementById('tagFormCancel').classList.add('hidden');
+  }
+
+  document.getElementById('tagForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const tagId = document.getElementById('tagFormId').value;
+    const tagName = document.getElementById('tagFormName').value;
+    const tagColor = document.getElementById('tagFormColor').value;
+
+    const isUpdate = tagId !== '';
+    const url = isUpdate
+      ? `<%= organization_tags_path(@organization) %>/${tagId}`
+      : `<%= organization_tags_path(@organization) %>`;
+    const method = isUpdate ? 'PATCH' : 'POST';
+
+    const formData = new FormData();
+    formData.append('tag[name]', tagName);
+    formData.append('tag[color]', tagColor);
+
+    fetch(url, {
+      method: method,
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to save tag. Please try again.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to save tag. Please try again.');
+    });
+  });
+
+  document.getElementById('tagModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeTagModal();
+  });
+</script>

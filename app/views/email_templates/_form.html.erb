@@ -1,0 +1,412 @@
+<%= form_with model: @template, url: form_url, class: "space-y-6" do |form| %>
+  <% if @template.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <ul class="list-disc list-inside">
+        <% @template.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="bg-white shadow rounded-lg p-6 space-y-4">
+    <div>
+      <%= form.label :name, "Template Name", class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_field :name, placeholder: "e.g., Re-engagement", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500", autofocus: true %>
+    </div>
+
+    <div>
+      <%= form.label :subject, "Email Subject", class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_field :subject, placeholder: "e.g., We miss you!", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden" id="template-builder">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900">Email Body</h2>
+        <p class="text-xs text-gray-500 mt-1">Add and arrange blocks. Buttons and links are tracked automatically when sent.</p>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <button type="button" id="tb-mode-builder" class="px-3 py-1.5 rounded-md bg-indigo-600 text-white font-semibold">Builder</button>
+        <button type="button" id="tb-mode-html" class="px-3 py-1.5 rounded-md bg-white border border-gray-300 text-gray-700 font-semibold">Raw HTML</button>
+        <button type="button" id="tb-mode-preview" class="px-3 py-1.5 rounded-md bg-white border border-gray-300 text-gray-700 font-semibold">Preview</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[200px_1fr] min-h-[500px]">
+      <aside id="tb-palette" class="border-r border-gray-200 bg-gray-50 p-4 space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Add a block</p>
+        <button type="button" data-tb-add="heading"   class="tb-palette-btn">＋ Heading</button>
+        <button type="button" data-tb-add="paragraph" class="tb-palette-btn">＋ Paragraph</button>
+        <button type="button" data-tb-add="button"    class="tb-palette-btn">＋ Button</button>
+        <button type="button" data-tb-add="link"      class="tb-palette-btn">＋ Link</button>
+        <button type="button" data-tb-add="image"     class="tb-palette-btn">＋ Image</button>
+        <button type="button" data-tb-add="divider"   class="tb-palette-btn">＋ Divider</button>
+        <button type="button" data-tb-add="spacer"    class="tb-palette-btn">＋ Spacer</button>
+      </aside>
+
+      <div id="tb-canvas-wrap" class="p-6 bg-gray-100 overflow-y-auto max-h-[700px]">
+        <div id="tb-canvas" class="bg-white shadow-sm rounded-md mx-auto max-w-2xl p-4 space-y-3"></div>
+        <p id="tb-empty" class="text-center text-sm text-gray-500 mt-6 hidden">Your email is empty. Click a block on the left to get started.</p>
+      </div>
+
+      <div id="tb-preview-pane" class="hidden lg:col-span-2 p-6 bg-gray-100">
+        <div class="bg-white shadow-sm rounded-md mx-auto max-w-2xl p-2">
+          <iframe id="tb-preview-frame" class="w-full min-h-[500px] border-0"></iframe>
+        </div>
+      </div>
+
+      <div id="tb-html-pane" class="hidden lg:col-span-2 p-6 bg-white">
+        <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-3">
+          Editing the HTML directly clears the visual builder content for this template.
+        </p>
+        <%= form.text_area :html_content, rows: 16, class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs" %>
+      </div>
+    </div>
+
+    <input type="hidden" name="blocks_json" id="tb-blocks-json" value="<%= @template.blocks_array.to_json %>">
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <%= form.label :text_content, "Plain Text Version (Optional)", class: "block text-sm font-medium text-gray-700" %>
+    <%= form.text_area :text_content, rows: 5, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+    <p class="mt-1 text-xs text-gray-500">Shown to email clients that don't support HTML.</p>
+  </div>
+
+  <div>
+    <%= form.submit submit_label, class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
+  </div>
+<% end %>
+
+<style>
+  .tb-palette-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tb-palette-btn:hover { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+
+  .tb-block {
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+    background: white;
+  }
+  .tb-block:hover { border-color: #c7d2fe; }
+  .tb-block.tb-selected { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+
+  .tb-block-toolbar {
+    position: absolute;
+    top: -12px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .tb-block:hover .tb-block-toolbar,
+  .tb-block.tb-selected .tb-block-toolbar { opacity: 1; }
+
+  .tb-block-toolbar button {
+    background: transparent;
+    border: 0;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #6b7280;
+  }
+  .tb-block-toolbar button:hover { color: #111827; }
+  .tb-block-toolbar button.tb-delete:hover { color: #dc2626; }
+
+  .tb-field { display: block; font-size: 12px; color: #6b7280; margin-top: 6px; }
+  .tb-field input, .tb-field select, .tb-field textarea {
+    display: block; width: 100%; padding: 6px 8px;
+    border: 1px solid #e5e7eb; border-radius: 4px;
+    font-size: 14px; margin-top: 2px;
+  }
+  .tb-field textarea { font-family: inherit; resize: vertical; }
+  .tb-label { font-size: 11px; font-weight: 600; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.04em; }
+</style>
+
+<script>
+  (function () {
+    const root      = document.getElementById("template-builder");
+    if (!root) return;
+
+    const canvas    = document.getElementById("tb-canvas");
+    const emptyMsg  = document.getElementById("tb-empty");
+    const jsonInput = document.getElementById("tb-blocks-json");
+    const htmlField = document.getElementById("email_template_html_content");
+    const previewFrame = document.getElementById("tb-preview-frame");
+
+    const canvasWrap  = document.getElementById("tb-canvas-wrap");
+    const previewPane = document.getElementById("tb-preview-pane");
+    const htmlPane    = document.getElementById("tb-html-pane");
+    const palette     = document.getElementById("tb-palette");
+
+    const modeButtons = {
+      builder: document.getElementById("tb-mode-builder"),
+      preview: document.getElementById("tb-mode-preview"),
+      html:    document.getElementById("tb-mode-html"),
+    };
+
+    let blocks = [];
+    try { blocks = JSON.parse(jsonInput.value || "[]") || []; } catch { blocks = []; }
+
+    const BLOCK_DEFAULTS = {
+      heading:   () => ({ type: "heading", level: 1, text: "New heading" }),
+      paragraph: () => ({ type: "paragraph", text: "Write your message here." }),
+      button:    () => ({ type: "button", label: "Click here", url: "https://example.com", color: "#4F46E5" }),
+      link:      () => ({ type: "link", text: "Read more", url: "https://example.com" }),
+      image:     () => ({ type: "image", url: "", alt: "", link_url: "" }),
+      divider:   () => ({ type: "divider" }),
+      spacer:    () => ({ type: "spacer", size: "medium" }),
+    };
+
+    function escapeHtml(value) {
+      const str = String(value == null ? "" : value);
+      return str.replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+
+    function sanitizeUrl(value) {
+      const str = String(value || "").trim();
+      if (!str) return "";
+      if (/^(https?:|mailto:)/i.test(str)) return str;
+      if (/^[\w.-]+\.[a-z]{2,}/i.test(str)) return "https://" + str;
+      return "";
+    }
+
+    function renderBlockHtml(block) {
+      switch (block.type) {
+        case "heading": {
+          const level = Math.min(3, Math.max(1, parseInt(block.level || 1)));
+          const size  = { 1: "28px", 2: "22px", 3: "18px" }[level];
+          return `<h${level} style="font-size:${size};font-weight:700;margin:16px 0;">${escapeHtml(block.text)}</h${level}>`;
+        }
+        case "paragraph":
+          return `<p style="font-size:16px;margin:12px 0;">${escapeHtml(block.text).replace(/\n/g, "<br>")}</p>`;
+        case "button": {
+          const url = sanitizeUrl(block.url) || "#";
+          const color = /^#[0-9a-f]{3,8}$/i.test(block.color || "") ? block.color : "#4F46E5";
+          return `<div style="text-align:center;margin:20px 0;"><a href="${url}" style="display:inline-block;background:${color};color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">${escapeHtml(block.label || "Click here")}</a></div>`;
+        }
+        case "link": {
+          const url = sanitizeUrl(block.url) || "#";
+          return `<p style="margin:12px 0;"><a href="${url}" style="color:#4F46E5;text-decoration:underline;">${escapeHtml(block.text || url)}</a></p>`;
+        }
+        case "divider":
+          return `<hr style="border:0;border-top:1px solid #e5e7eb;margin:24px 0;">`;
+        case "image": {
+          const url = sanitizeUrl(block.url);
+          if (!url) return `<div style="background:#f3f4f6;border:1px dashed #d1d5db;padding:24px;text-align:center;color:#9ca3af;border-radius:4px;">(Image - set a URL)</div>`;
+          const linkUrl = sanitizeUrl(block.link_url);
+          const img = `<img src="${url}" alt="${escapeHtml(block.alt)}" style="max-width:100%;height:auto;display:block;margin:16px auto;border-radius:4px;">`;
+          return linkUrl ? `<a href="${linkUrl}">${img}</a>` : img;
+        }
+        case "spacer": {
+          const h = { small: 12, medium: 24, large: 48 }[block.size] || 24;
+          return `<div style="height:${h}px;line-height:${h}px;">&nbsp;</div>`;
+        }
+        default: return "";
+      }
+    }
+
+    function renderFullEmail() {
+      const body = blocks.map(renderBlockHtml).join("\n");
+      return `<div style="max-width:600px;margin:0 auto;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;line-height:1.6;">\n${body}\n</div>`;
+    }
+
+    function fieldRow(label, html) {
+      return `<label class="tb-field"><span>${label}</span>${html}</label>`;
+    }
+
+    function renderEditor(block, idx) {
+      switch (block.type) {
+        case "heading":
+          return `
+            <span class="tb-label">Heading</span>
+            ${fieldRow("Text", `<input type="text" data-field="text" value="${escapeHtml(block.text)}">`)}
+            ${fieldRow("Level", `<select data-field="level"><option value="1" ${block.level==1?"selected":""}>H1 - Large</option><option value="2" ${block.level==2?"selected":""}>H2 - Medium</option><option value="3" ${block.level==3?"selected":""}>H3 - Small</option></select>`)}
+            <div class="tb-block-preview" style="margin-top:10px;">${renderBlockHtml(block)}</div>`;
+        case "paragraph":
+          return `
+            <span class="tb-label">Paragraph</span>
+            ${fieldRow("Text", `<textarea data-field="text" rows="3">${escapeHtml(block.text)}</textarea>`)}`;
+        case "button":
+          return `
+            <span class="tb-label">Button</span>
+            ${fieldRow("Label", `<input type="text" data-field="label" value="${escapeHtml(block.label)}">`)}
+            ${fieldRow("Link URL", `<input type="url" data-field="url" placeholder="https://..." value="${escapeHtml(block.url)}">`)}
+            ${fieldRow("Color", `<input type="color" data-field="color" value="${escapeHtml(block.color || '#4F46E5')}" style="width:60px;height:32px;padding:2px;">`)}
+            <div class="tb-block-preview" style="margin-top:10px;">${renderBlockHtml(block)}</div>`;
+        case "link":
+          return `
+            <span class="tb-label">Link</span>
+            ${fieldRow("Text", `<input type="text" data-field="text" value="${escapeHtml(block.text)}">`)}
+            ${fieldRow("URL", `<input type="url" data-field="url" placeholder="https://..." value="${escapeHtml(block.url)}">`)}
+            <div class="tb-block-preview" style="margin-top:10px;">${renderBlockHtml(block)}</div>`;
+        case "image":
+          return `
+            <span class="tb-label">Image</span>
+            ${fieldRow("Image URL", `<input type="url" data-field="url" placeholder="https://..." value="${escapeHtml(block.url)}">`)}
+            ${fieldRow("Alt text", `<input type="text" data-field="alt" value="${escapeHtml(block.alt)}">`)}
+            ${fieldRow("Link URL (optional)", `<input type="url" data-field="link_url" placeholder="https://..." value="${escapeHtml(block.link_url || '')}">`)}
+            <div class="tb-block-preview" style="margin-top:10px;">${renderBlockHtml(block)}</div>`;
+        case "divider":
+          return `<span class="tb-label">Divider</span><div style="margin-top:8px;">${renderBlockHtml(block)}</div>`;
+        case "spacer":
+          return `
+            <span class="tb-label">Spacer</span>
+            ${fieldRow("Size", `<select data-field="size">
+              <option value="small"  ${block.size==='small'?'selected':''}>Small</option>
+              <option value="medium" ${block.size==='medium'?'selected':''}>Medium</option>
+              <option value="large"  ${block.size==='large'?'selected':''}>Large</option>
+            </select>`)}
+            <div class="tb-block-preview" style="margin-top:10px;">${renderBlockHtml(block)}</div>`;
+        default: return "";
+      }
+    }
+
+    function render() {
+      canvas.innerHTML = "";
+      if (blocks.length === 0) {
+        emptyMsg.classList.remove("hidden");
+      } else {
+        emptyMsg.classList.add("hidden");
+      }
+
+      blocks.forEach((block, idx) => {
+        const wrap = document.createElement("div");
+        wrap.className = "tb-block";
+        wrap.dataset.idx = idx;
+        wrap.innerHTML = `
+          <div class="tb-block-toolbar">
+            <button type="button" data-act="up"     title="Move up">↑</button>
+            <button type="button" data-act="down"   title="Move down">↓</button>
+            <button type="button" data-act="delete" class="tb-delete" title="Delete">✕</button>
+          </div>
+          ${renderEditor(block, idx)}
+        `;
+        canvas.appendChild(wrap);
+      });
+
+      syncHidden();
+    }
+
+    function syncHidden() {
+      jsonInput.value = JSON.stringify(blocks);
+      if (!htmlPane.classList.contains("hidden")) return;
+      if (htmlField) htmlField.value = blocks.length > 0 ? renderFullEmail() : (htmlField.value || "");
+    }
+
+    canvas.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-act]");
+      if (!btn) return;
+      const blockEl = btn.closest(".tb-block");
+      const idx = parseInt(blockEl.dataset.idx);
+      const act = btn.dataset.act;
+      if (act === "delete") {
+        blocks.splice(idx, 1);
+      } else if (act === "up" && idx > 0) {
+        [blocks[idx - 1], blocks[idx]] = [blocks[idx], blocks[idx - 1]];
+      } else if (act === "down" && idx < blocks.length - 1) {
+        [blocks[idx + 1], blocks[idx]] = [blocks[idx], blocks[idx + 1]];
+      }
+      render();
+    });
+
+    canvas.addEventListener("input", (e) => {
+      const target = e.target.closest("[data-field]");
+      if (!target) return;
+      const blockEl = target.closest(".tb-block");
+      const idx = parseInt(blockEl.dataset.idx);
+      const field = target.dataset.field;
+      let value = target.value;
+      if (field === "level") value = parseInt(value);
+      blocks[idx][field] = value;
+      syncHidden();
+      const previewEl = blockEl.querySelector(".tb-block-preview");
+      if (previewEl) previewEl.innerHTML = renderBlockHtml(blocks[idx]);
+    });
+
+    palette.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-tb-add]");
+      if (!btn) return;
+      const type = btn.dataset.tbAdd;
+      const factory = BLOCK_DEFAULTS[type];
+      if (!factory) return;
+      blocks.push(factory());
+      render();
+    });
+
+    function setMode(mode) {
+      const states = {
+        builder: { canvasWrap: false, palette: false, preview: true, html: true },
+        preview: { canvasWrap: true,  palette: true,  preview: false, html: true },
+        html:    { canvasWrap: true,  palette: true,  preview: true,  html: false },
+      }[mode];
+      canvasWrap.classList.toggle("hidden", states.canvasWrap);
+      palette.classList.toggle("hidden", states.palette);
+      previewPane.classList.toggle("hidden", states.preview);
+      htmlPane.classList.toggle("hidden", states.html);
+
+      Object.entries(modeButtons).forEach(([key, btn]) => {
+        const active = key === mode;
+        btn.classList.toggle("bg-indigo-600", active);
+        btn.classList.toggle("text-white", active);
+        btn.classList.toggle("bg-white", !active);
+        btn.classList.toggle("border", !active);
+        btn.classList.toggle("border-gray-300", !active);
+        btn.classList.toggle("text-gray-700", !active);
+      });
+
+      if (mode === "preview") {
+        const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+        doc.open(); doc.write(`<!doctype html><html><body style="margin:0;background:#f3f4f6;">${renderFullEmail()}</body></html>`); doc.close();
+      }
+      if (mode === "html") {
+        if (htmlField && blocks.length > 0) htmlField.value = renderFullEmail();
+      }
+      if (mode === "builder") {
+        if (htmlField && blocks.length > 0) {
+          const expected = renderFullEmail();
+          if (htmlField.value.trim() && htmlField.value.trim() !== expected.trim()) {
+            if (confirm("You edited the HTML directly. Switch back to the builder and discard those edits?")) {
+              htmlField.value = renderFullEmail();
+            } else {
+              blocks = [];
+              jsonInput.value = "[]";
+              render();
+            }
+          }
+        }
+      }
+    }
+
+    modeButtons.builder.addEventListener("click", () => setMode("builder"));
+    modeButtons.preview.addEventListener("click", () => setMode("preview"));
+    modeButtons.html.addEventListener("click", () => setMode("html"));
+
+    root.closest("form").addEventListener("submit", () => {
+      jsonInput.value = JSON.stringify(blocks);
+      if (blocks.length > 0 && htmlField) htmlField.value = renderFullEmail();
+    });
+
+    render();
+  })();
+</script>

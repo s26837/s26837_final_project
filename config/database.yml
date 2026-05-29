@@ -1,0 +1,32 @@
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: s26837_project_development
+
+test:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
+
+production:
+  primary: &primary_production
+    <<: *default
+    database: s26837_project_production
+    username: s26837_project
+    password: <%= ENV["S26837_PROJECT_DATABASE_PASSWORD"] %>
+  cache:
+    <<: *primary_production
+    database: s26837_project_production_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: s26837_project_production_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: s26837_project_production_cable
+    migrations_paths: db/cable_migrate

@@ -1,0 +1,53 @@
+<div class="max-w-7xl mx-auto py-8 px-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Automations</h1>
+    <%= link_to "New Automation", new_organization_automation_rule_path(@organization), class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+  </div>
+  
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trigger</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @rules.each do |rule| %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= rule.name %></td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              <% if rule.trigger_type == 'tag_based' %>
+                <% tag = @organization.tags.find_by(id: rule.trigger_conditions&.dig('tag_id')) %>
+                Tag: <span class="font-medium"><%= tag&.name || '-' %></span>
+                · delay <%= rule.delay_hours %>h
+              <% elsif rule.trigger_type == 'time_based' %>
+                <% segment_tag = @organization.tags.find_by(id: rule.trigger_conditions&.dig('segment_tag_id')) %>
+                No engagement for <span class="font-medium"><%= rule.trigger_conditions&.dig('inactivity_hours') %>h</span>
+                <% if segment_tag %><br><span class="text-xs text-gray-500">limited to tag: <%= segment_tag.name %></span><% end %>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= rule.email_template&.name %></td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <%= active_status_badge(rule.active?, extra_classes: "px-2 text-xs leading-5 rounded-full") %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <%= link_to "View", organization_automation_rule_path(@organization, rule), class: "text-indigo-600 hover:text-indigo-900 mr-3" %>
+              <%= link_to "Edit", edit_organization_automation_rule_path(@organization, rule), class: "text-gray-600 hover:text-gray-900 mr-3" %>
+              <%= link_to "Delete", organization_automation_rule_path(@organization, rule), data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-600 hover:text-red-900" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  
+  <% if @rules.empty? %>
+    <div class="text-center py-12 bg-white rounded-lg shadow mt-6">
+      <p class="text-gray-500">No automation rules yet. <%= link_to "Create your first automation", new_organization_automation_rule_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>.</p>
+    </div>
+  <% end %>
+</div>

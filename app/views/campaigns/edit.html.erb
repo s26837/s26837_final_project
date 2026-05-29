@@ -1,0 +1,11 @@
+<div class="max-w-4xl mx-auto py-8 px-4">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Edit Campaign</h1>
+
+  <%= render "form",
+        form_url: organization_campaign_path(@organization, @campaign),
+        submit_label: "Update Campaign" %>
+
+  <div class="mt-6">
+    <%= link_to "Back to Campaigns", organization_campaigns_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+#!/bin/bash
+set -e
+
+cd /app
+
+rm -f tmp/pids/server.pid
+
+if ! bundle check >/dev/null 2>&1; then
+  echo "Gemfile changed, installing missing gems."
+  bundle install
+fi
+
+echo "Waiting for postgres"
+for i in $(seq 1 60); do
+  if (echo > /dev/tcp/db/5432) 2>/dev/null; then
+    echo "Postgres is ready."
+    break
+  fi
+  sleep 1
+done
+
+if bin/rails runner "ActiveRecord::Base.connection.table_exists?('users') ? exit(0) : exit(1)" >/dev/null 2>&1; then
+  echo "Schema present, running pending migrations."
+  bin/rails db:migrate
+else
+  echo "Empty or partial database, resetting and loading schema."
+  bin/rails db:drop 2>/dev/null || true
+  bin/rails db:create
+  bin/rails db:schema:load
+fi
+
+echo "Seeding"
+bin/rails db:seed
+
+if ! command -v foreman >/dev/null 2>&1; then
+  echo "foreman not found, installing."
+  gem install foreman
+fi
+
+export PORT="${PORT:-3000}"
+
+exec foreman start -f Procfile.dev

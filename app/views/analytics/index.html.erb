@@ -1,0 +1,163 @@
+<div class="max-w-7xl mx-auto py-8 px-4">
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Analytics</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Total Contacts</div>
+      <div class="mt-2 text-3xl font-bold text-gray-900"><%= @total_contacts %></div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Emails Sent</div>
+      <div class="mt-2 text-3xl font-bold text-blue-600"><%= @total_sent %></div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Total Campaigns</div>
+      <div class="mt-2 text-3xl font-bold text-indigo-600"><%= @total_campaigns %></div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Active Automations</div>
+      <div class="mt-2 text-3xl font-bold text-purple-600"><%= @organization.automation_rules.where(active: true).count %></div>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-6">Email Performance Metrics</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Delivery Rate</span>
+          <span class="text-2xl font-bold text-gray-900"><%= @delivery_rate %>%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-green-600 h-2 rounded-full" style="width: <%= @delivery_rate %>%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1"><%= @total_sent %> of <%= @total_attempts %> attempted sends succeeded</p>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Open Rate</span>
+          <span class="text-2xl font-bold text-gray-900"><%= @open_rate %>%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-blue-600 h-2 rounded-full" style="width: <%= @open_rate %>%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1"><%= @opened_count %> of <%= @total_sent %> opened</p>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Click Rate</span>
+          <span class="text-2xl font-bold text-gray-900"><%= @click_rate %>%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-purple-600 h-2 rounded-full" style="width: <%= @click_rate %>%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1"><%= @clicked_count %> of <%= @total_sent %> clicked</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Recent Campaign Performance</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sent</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivered</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opened</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clicked</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @recent_campaigns.each do |row| %>
+            <%
+              campaign  = row[:campaign]
+              total     = row[:total]
+              delivered = row[:delivered]
+              opened    = row[:opened]
+              clicked   = row[:clicked]
+            %>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900"><%= campaign.name %></div>
+                <div class="text-xs text-gray-500"><%= campaign.sent_at&.strftime("%b %d, %Y") %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= total %></td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900"><%= delivered %></div>
+                <div class="text-xs text-gray-500"><%= total > 0 ? "#{((delivered.to_f / total) * 100).round(1)}%" : "0%" %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900"><%= opened %></div>
+                <div class="text-xs text-gray-500"><%= delivered > 0 ? "#{((opened.to_f / delivered) * 100).round(1)}%" : "0%" %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900"><%= clicked %></div>
+                <div class="text-xs text-gray-500"><%= delivered > 0 ? "#{((clicked.to_f / delivered) * 100).round(1)}%" : "0%" %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <%= link_to "View Details", organization_campaign_path(@organization, campaign), class: "text-indigo-600 hover:text-indigo-900" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Tag Performance</h2>
+      <p class="text-sm text-gray-500 mt-1">Engagement metrics by tag segment</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tag</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacts</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emails Sent</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Open Rate</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Click Rate</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @tag_stats.each do |stat| %>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" style="background-color: <%= stat[:tag].color || '#E5E7EB' %>; color: <%= stat[:tag].color ? '#FFFFFF' : '#1F2937' %>;">
+                  <%= stat[:tag].name %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= stat[:contact_count] %></td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= stat[:emails_sent] %></td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: <%= [stat[:open_rate], 100].min %>%"></div>
+                  </div>
+                  <span class="text-sm text-gray-900"><%= stat[:open_rate] %>%</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                    <div class="bg-purple-600 h-2 rounded-full" style="width: <%= [stat[:click_rate], 100].min %>%"></div>
+                  </div>
+                  <span class="text-sm text-gray-900"><%= stat[:click_rate] %>%</span>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

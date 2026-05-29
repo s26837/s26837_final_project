@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: my_user
+      POSTGRES_PASSWORD: my_secure_password
+      POSTGRES_DB: my_project_development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U my_user -d my_project_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    command: bash bin/docker-dev-start
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://my_user:my_secure_password@db:5432/my_project_development
+      POSTGRES_USER: my_user
+      RAILS_ENV: development
+      BINDING: 0.0.0.0
+      SOLID_QUEUE_IN_PUMA: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    tty: true
+    stdin_open: true
+
+volumes:
+  postgres_data:

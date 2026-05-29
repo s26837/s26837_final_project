@@ -1,0 +1,48 @@
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Edit Tag</h1>
+  
+  <%= form_with model: @tag, url: organization_tag_path(@organization, @tag), class: "space-y-6" do |form| %>
+    <% if @tag.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <ul class="list-disc list-inside">
+          <% @tag.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-white shadow rounded-lg p-6 space-y-4">
+      <div>
+        <%= form.label :name, "Tag Name", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500", autofocus: true %>
+      </div>
+
+      <div>
+        <%= form.label :color, "Color (Optional)", class: "block text-sm font-medium text-gray-700" %>
+        <div class="mt-1 flex gap-2">
+          <%= form.color_field :color, class: "h-10 w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+          <span class="text-sm text-gray-500 self-center">Choose a color for visual identification</span>
+        </div>
+      </div>
+
+      <!-- Color Presets -->
+      <div>
+        <p class="text-sm font-medium text-gray-700 mb-2">Quick Colors:</p>
+        <div class="flex gap-2 flex-wrap">
+          <% ['#4F46E5', '#DC2626', '#059669', '#D97706', '#7C3AED', '#DB2777', '#2563EB', '#65A30D'].each do |color| %>
+            <button type="button" onclick="document.getElementById('tag_color').value='<%= color %>'" class="w-8 h-8 rounded border-2 border-gray-300 hover:border-gray-500" style="background-color: <%= color %>;"></button>
+          <% end %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.submit "Update Tag", class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
+      </div>
+    </div>
+  <% end %>
+  
+  <div class="mt-6">
+    <%= link_to "Back to Tags", organization_tags_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>
+  </div>
+</div>

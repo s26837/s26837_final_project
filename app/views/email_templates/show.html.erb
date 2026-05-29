@@ -1,0 +1,48 @@
+<div class="max-w-4xl mx-auto py-8 px-4">
+  <div class="mb-6">
+    <%= link_to "← Back to Templates", organization_email_templates_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900"><%= @template.name %></h1>
+        <p class="text-gray-600 mt-2">Subject: <%= @template.subject %></p>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "Edit", edit_organization_email_template_path(@organization, @template), class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+        <%= button_to "Delete", organization_email_template_path(@organization, @template), method: :delete, form: { data: { turbo_confirm: "Are you sure?" } }, class: "px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700" %>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-200 pt-4">
+      <h3 class="text-sm font-medium text-gray-700 mb-2">HTML Preview:</h3>
+      <div class="border border-gray-300 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+        <%= raw @template.html_content %>
+      </div>
+    </div>
+
+    <% if @template.text_content.present? %>
+      <div class="border-t border-gray-200 mt-4 pt-4">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Plain Text Version:</h3>
+        <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
+          <pre class="whitespace-pre-wrap text-sm"><%= @template.text_content %></pre>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Template Usage</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <div class="text-sm text-gray-500">Used in Campaigns</div>
+        <div class="text-2xl font-bold text-gray-900"><%= @template.campaigns.count %></div>
+      </div>
+      <div>
+        <div class="text-sm text-gray-500">Used in Automation Rules</div>
+        <div class="text-2xl font-bold text-gray-900"><%= @template.automation_rules.count %></div>
+      </div>
+    </div>
+  </div>
+</div>

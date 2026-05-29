@@ -1,0 +1,100 @@
+<div class="max-w-7xl mx-auto py-8 px-4">
+  <div class="mb-6">
+    <%= link_to "← Back to Automation Rules", organization_automation_rules_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <div class="flex justify-between items-start">
+      <div class="flex-1">
+        <h1 class="text-3xl font-bold text-gray-900"><%= @rule.name %></h1>
+        <div class="mt-4 space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-500">Trigger:</span>
+            <span class="text-sm text-gray-900">When a contact is tagged</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-500">Delay:</span>
+            <span class="text-sm text-gray-900"><%= @rule.delay_hours %> hours</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-500">Template:</span>
+            <span class="text-sm text-gray-900"><%= @rule.email_template&.name %></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-500">Status:</span>
+            <%= active_status_badge(@rule.active?, extra_classes: "px-2 py-1 text-xs") %>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "Edit", edit_organization_automation_rule_path(@organization, @rule), class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Total Executions</div>
+      <div class="mt-2 text-3xl font-bold text-gray-900"><%= @rule.automation_executions.count %></div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Completed</div>
+      <div class="mt-2 text-3xl font-bold text-green-600"><%= @rule.automation_executions.where(status: 'completed').count %></div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="text-sm font-medium text-gray-500">Pending</div>
+      <div class="mt-2 text-3xl font-bold text-yellow-600"><%= @rule.automation_executions.where(status: 'pending').count %></div>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-medium text-gray-900">Execution Log</h2>
+      <p class="mt-1 text-sm text-gray-500">Recent automated email sends from this rule</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Executed At</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @executions.each do |execution| %>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900"><%= execution.contact.full_name %></div>
+                <div class="text-sm text-gray-500"><%= execution.contact.email %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= execution.status == 'completed' ? 'bg-green-100 text-green-800' : execution.status == 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800' %>">
+                  <%= execution.status %>
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= execution.executed_at ? execution.executed_at.strftime("%b %d, %Y %I:%M %p") : 'Pending' %>
+              </td>
+              <td class="px-6 py-4 text-sm text-red-600">
+                <%= execution.error_message %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <%= link_to "View Contact", organization_contact_path(@organization, execution.contact), class: "text-indigo-600 hover:text-indigo-900" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <% if @executions.empty? %>
+    <div class="text-center py-12 bg-white rounded-lg shadow mt-6">
+      <p class="text-gray-500">No executions yet for this automation rule.</p>
+      <p class="text-sm text-gray-400 mt-2">The automation will trigger when contacts meet the conditions.</p>
+    </div>
+  <% end %>
+</div>

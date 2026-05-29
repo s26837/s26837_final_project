@@ -1,0 +1,47 @@
+<div class="max-w-7xl mx-auto py-8 px-4">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Campaigns</h1>
+    <%= link_to "New Campaign", new_organization_campaign_path(@organization), class: "inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700" %>
+  </div>
+  
+  <div class="grid gap-6">
+    <% @campaigns.each do |campaign| %>
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h3 class="text-lg font-medium text-gray-900"><%= campaign.name %></h3>
+            <p class="text-sm text-gray-500 mt-1">
+              <% if campaign.steps.any? %>
+                <%= pluralize(campaign.steps.size, 'email') %>: <%= campaign.steps.map { |s| s.email_template.name }.join(' → ') %>
+              <% else %>
+                No emails configured
+              <% end %>
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+              Status: <%= campaign_status_badge(campaign.status, extra_classes: "ml-1 px-2 py-0.5 text-xs") %>
+            </p>
+            <% if campaign.scheduled? && campaign.scheduled_at %>
+              <p class="text-sm text-blue-700 mt-1">Scheduled for <%= campaign.scheduled_at.strftime("%b %d, %Y at %I:%M %p %Z") %></p>
+            <% end %>
+            <% if campaign.sent_at %>
+              <p class="text-sm text-gray-500">Sent: <%= campaign.sent_at.strftime("%b %d, %Y at %I:%M %p") %></p>
+            <% end %>
+          </div>
+          <div class="flex gap-2 items-center">
+            <%= link_to "View", organization_campaign_path(@organization, campaign), class: "text-indigo-600 hover:text-indigo-900 text-sm font-medium" %>
+            <%= button_to "Delete", organization_campaign_path(@organization, campaign), method: :delete, form: { data: { turbo_confirm: "Delete campaign \"#{campaign.name}\"? This also deletes its sends and engagement events." } }, class: "text-red-600 hover:text-red-900 text-sm font-medium bg-transparent border-0 cursor-pointer p-0" %>
+            <% if campaign.status == 'draft' || campaign.status == 'scheduled' %>
+              <%= button_to "Send Now", send_now_organization_campaign_path(@organization, campaign), class: "text-green-600 hover:text-green-900 text-sm font-medium bg-transparent border-0 cursor-pointer p-0" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  
+  <% if @campaigns.empty? %>
+    <div class="text-center py-12 bg-white rounded-lg shadow">
+      <p class="text-gray-500">No campaigns yet. <%= link_to "Create your first campaign", new_organization_campaign_path(@organization), class: "text-indigo-600 hover:text-indigo-500" %>.</p>
+    </div>
+  <% end %>
+</div>

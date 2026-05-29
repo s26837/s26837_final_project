@@ -1,0 +1,182 @@
+<div class="max-w-4xl mx-auto py-8 px-4">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900"><%= current_user.admin_of?(@organization) ? "Organization Settings" : @organization.name %></h1>
+    <% if current_user.admin_of?(@organization) %>
+      <p class="mt-2 text-sm text-gray-600">Manage your organization details and preferences</p>
+    <% end %>
+  </div>
+
+  <% if current_user.admin_of?(@organization) %>
+  <div x-data="{ dirty: false }" @input="dirty = true" @reset="dirty = false">
+  <%= form_with model: @organization, class: "space-y-6" do |form| %>
+    <% if @organization.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <ul class="list-disc list-inside">
+          <% @organization.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-medium text-gray-900">Basic Information</h2>
+      </div>
+      <div class="px-6 py-4 space-y-4">
+        <div>
+          <%= form.label :name, "Organization Name", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.text_field :name, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+        </div>
+
+        <div>
+          <%= form.label :description, class: "block text-sm font-medium text-gray-700" %>
+          <%= form.text_area :description, rows: 4, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-between">
+      <button type="reset" :disabled="!dirty"
+              :class="dirty
+                ? 'px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer'
+                : 'px-4 py-2 border border-gray-200 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-50 cursor-not-allowed'">
+        Cancel
+      </button>
+      <button type="submit" :disabled="!dirty"
+              :class="dirty
+                ? 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer'
+                : 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-300 cursor-not-allowed'">
+        Save Changes
+      </button>
+    </div>
+  <% end %>
+  </div>
+
+  <div class="space-y-6 mt-6">
+    <% mode = @organization.sendgrid_mode %>
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-medium text-gray-900">Email Delivery</h2>
+        <p class="text-sm text-gray-500 mt-1">Configure the SendGrid API key used to send your campaigns.</p>
+
+        <% if mode == :demo %>
+          <%
+            usage = DemoKeyUsage.current
+            usage.reset_if_due!
+            used = usage.count
+            limit = DemoKeyUsage::DAILY_LIMIT
+            pct = (used.to_f / limit * 100).clamp(0, 100)
+            bar_color = pct >= 90 ? 'bg-red-600' : pct >= 60 ? 'bg-amber-500' : 'bg-emerald-500'
+          %>
+          <div class="mt-4 rounded-md bg-amber-50 border border-amber-200 p-4">
+            <p class="text-sm font-semibold text-amber-900">Demo mode active</p>
+            <p class="mt-1 text-xs text-amber-800">
+              Campaigns send through the shared <code class="font-mono">SENDGRID_DEMO_API_KEY</code>. Rate-limited and shared across all demo organizations. Resets at midnight <%= DemoKeyUsage::TIME_ZONE %>.
+            </p>
+            <div class="mt-3">
+              <div class="flex items-center justify-between mb-1">
+                <p class="text-xs font-semibold text-amber-900">Demo key usage today</p>
+                <p class="text-xs font-mono text-amber-900"><%= used %> / <%= limit %></p>
+              </div>
+              <div class="w-full bg-amber-100 rounded-full h-2">
+                <div class="h-2 rounded-full <%= bar_color %>" style="width: <%= pct %>%"></div>
+              </div>
+              <% if used >= limit %>
+                <p class="mt-2 text-xs font-semibold text-red-700">Limit reached, new demo sends will fail until reset.</p>
+              <% end %>
+            </div>
+          </div>
+        <% elsif mode == :custom %>
+          <div class="mt-4 rounded-md bg-green-50 border border-green-200 p-4">
+            <p class="text-sm font-semibold text-green-900">Custom SendGrid key configured</p>
+            <p class="mt-1 text-xs text-green-800">Campaigns send through your saved key.</p>
+          </div>
+        <% else %>
+          <div class="mt-4 rounded-md bg-red-50 border border-red-200 p-4">
+            <p class="text-sm font-semibold text-red-900">SendGrid not configured</p>
+            <p class="mt-1 text-xs text-red-800">Add a key below, or switch to the shared demo key for testing.</p>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="px-6 py-4 space-y-4">
+        <div>
+          <label for="sendgrid_api_key" class="block text-sm font-medium text-gray-700">SendGrid API key</label>
+          <input type="password" name="sendgrid_api_key" id="sendgrid_api_key" form="sendgrid-key-form"
+                 placeholder="<%= mode == :custom ? '••••••••••••••••••••' : 'SG.xxxxxxxxxxxxxxxxxxxxxxxx' %>"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm">
+          <p class="mt-1 text-xs text-gray-500">
+            <% if mode == :custom %>
+              A custom key is currently saved. Paste a new one to replace it.
+            <% else %>
+              Recommended for production. Get one from your SendGrid dashboard.
+            <% end %>
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <% if mode == :custom %>
+            <button type="submit" form="sendgrid-use-demo-form" class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">Switch to demo key</button>
+          <% elsif mode == :demo && @organization.sendgrid_api_key.present? %>
+            <button type="submit" form="sendgrid-use-custom-form" class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">Use my saved custom key</button>
+          <% elsif mode != :demo %>
+            <button type="submit" form="sendgrid-use-demo-form" class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">Use demo key instead</button>
+          <% end %>
+          <button type="submit" form="sendgrid-key-form" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer">
+            <%= mode == :custom ? "Replace key" : "Save key" %>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-medium text-gray-900">Organization Stats</h2>
+      </div>
+      <div class="px-6 py-4">
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Total Members</dt>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900"><%= @organization.organization_memberships.count %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Total Contacts</dt>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900"><%= @organization.contacts.count %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-500">Campaigns Sent</dt>
+            <dd class="mt-1 text-2xl font-semibold text-gray-900"><%= @organization.campaigns.where.not(sent_at: nil).count %></dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+  </div>
+
+  <%= form_with url: set_sendgrid_key_organization_path(@organization), method: :patch, local: true, id: "sendgrid-key-form", class: "hidden" do %>
+    <input type="hidden" name="return_to" value="settings">
+  <% end %>
+
+  <%= form_with url: set_sendgrid_key_organization_path(@organization), method: :patch, local: true, id: "sendgrid-use-demo-form", class: "hidden" do %>
+    <input type="hidden" name="return_to" value="settings">
+    <input type="hidden" name="use_demo" value="1">
+  <% end %>
+
+  <% if @organization.sendgrid_api_key.present? %>
+    <%= form_with url: set_sendgrid_key_organization_path(@organization), method: :patch, local: true, id: "sendgrid-use-custom-form", class: "hidden" do %>
+      <input type="hidden" name="return_to" value="settings">
+      <input type="hidden" name="sendgrid_api_key" value="<%= @organization.sendgrid_api_key %>">
+    <% end %>
+  <% end %>
+  <% end %>
+
+  <div class="mt-6 flex justify-between items-center">
+    <% unless current_user.owner_of?(@organization) %>
+      <%= button_to "Leave Organization", leave_organization_path(@organization), method: :delete, form: { data: { turbo_confirm: "Leave #{@organization.name}? You'll lose access to its contacts and campaigns." } }, class: "px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700" %>
+    <% else %>
+      <span></span>
+    <% end %>
+    <%= button_to "Logout", logout_path, method: :delete, class: "px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50" %>
+  </div>
+</div>

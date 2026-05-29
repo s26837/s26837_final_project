@@ -1,0 +1,101 @@
+<%= form_with model: @rule, url: form_url, class: "space-y-6" do |form| %>
+  <% if @rule.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+      <ul class="list-disc list-inside">
+        <% @rule.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="bg-white shadow rounded-lg p-6 space-y-4">
+    <div>
+      <%= form.label :name, "Automation Name", class: "block text-sm font-medium text-gray-700" %>
+      <%= form.text_field :name, placeholder: "e.g., Re-engage cold leads", class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500", autofocus: true %>
+    </div>
+
+    <div>
+      <%= form.label :trigger_type, "Trigger Type", class: "block text-sm font-medium text-gray-700" %>
+      <%= form.select :trigger_type,
+            [
+              ["When a contact is tagged",           "tag_based"],
+              ["When a contact has been inactive",   "time_based"]
+            ],
+            { selected: @rule.trigger_type.presence || "tag_based" },
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+            id: "automation_trigger_type" %>
+    </div>
+
+
+    <div id="tag-based-fields" class="space-y-4 <%= 'hidden' if @rule.trigger_type == 'time_based' %>">
+      <div>
+        <label for="automation_rule_trigger_conditions_tag_id" class="block text-sm font-medium text-gray-700">Trigger Tag</label>
+        <%= select_tag 'automation_rule[trigger_conditions][tag_id]',
+              options_from_collection_for_select(@tags, :id, :name, @rule.trigger_conditions&.dig('tag_id')),
+              prompt: "Select a tag",
+              id: "automation_rule_trigger_conditions_tag_id",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+        <p class="mt-1 text-sm text-gray-500">Send email when a contact receives this tag.</p>
+      </div>
+
+      <div>
+        <%= form.label :delay_hours, "Delay (hours after tag is applied)", class: "block text-sm font-medium text-gray-700" %>
+        <%= form.number_field :delay_hours, value: @rule.delay_hours.presence || 24, min: 0, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+      </div>
+    </div>
+
+    <div id="time-based-fields" class="space-y-4 <%= 'hidden' unless @rule.trigger_type == 'time_based' %>">
+      <div>
+        <label for="automation_rule_trigger_conditions_inactivity_hours" class="block text-sm font-medium text-gray-700">Inactivity window (hours with no opens or clicks)</label>
+        <%= number_field_tag 'automation_rule[trigger_conditions][inactivity_hours]',
+              @rule.trigger_conditions&.dig('inactivity_hours') || 168,
+              min: 1,
+              id: "automation_rule_trigger_conditions_inactivity_hours",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+        <p class="mt-1 text-sm text-gray-500">Default 168 hours = 7 days. The automation fires once per contact when their last engagement is older than this.</p>
+      </div>
+
+      <div>
+        <label for="automation_rule_trigger_conditions_segment_tag_id" class="block text-sm font-medium text-gray-700">Limit to tag (optional)</label>
+        <%= select_tag 'automation_rule[trigger_conditions][segment_tag_id]',
+              options_from_collection_for_select(@tags, :id, :name, @rule.trigger_conditions&.dig('segment_tag_id')),
+              include_blank: "All contacts",
+              id: "automation_rule_trigger_conditions_segment_tag_id",
+              class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+        <p class="mt-1 text-sm text-gray-500">Restrict the automation to contacts carrying a specific tag.</p>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :email_template_id, "Email Template", class: "block text-sm font-medium text-gray-700" %>
+      <%= form.select :email_template_id, options_from_collection_for_select(@templates, :id, :name, @rule.email_template_id), { prompt: "Select a template" }, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" %>
+    </div>
+
+    <div class="flex items-center">
+      <%= form.check_box :active, { checked: @rule.new_record? ? true : @rule.active }, "1", "0" %>
+      <%= form.label :active, "Active", class: "ml-2 block text-sm text-gray-900" %>
+    </div>
+
+    <div>
+      <%= form.submit submit_label, class: "w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer" %>
+    </div>
+  </div>
+<% end %>
+
+<script>
+  (function () {
+    const select = document.getElementById("automation_trigger_type");
+    const tagPane  = document.getElementById("tag-based-fields");
+    const timePane = document.getElementById("time-based-fields");
+    if (!select || !tagPane || !timePane) return;
+
+    function sync() {
+      const isTime = select.value === "time_based";
+      tagPane.classList.toggle("hidden", isTime);
+      timePane.classList.toggle("hidden", !isTime);
+    }
+    select.addEventListener("change", sync);
+    sync();
+  })();
+</script>
