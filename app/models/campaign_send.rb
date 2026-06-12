@@ -9,7 +9,7 @@ class CampaignSend < ApplicationRecord
   validates :status, presence: true, inclusion: { in: %w[queued sent delivered failed bounced spam] }
   validates :campaign_step_id, uniqueness: { scope: :contact_id, allow_nil: true }
 
-  before_create :set_default_status
+  before_validation :set_default_status, on: :create
   after_update_commit :broadcast_subscribed_views, if: :saved_change_to_status?
 
   scope :queued, -> { where(status: 'queued') }

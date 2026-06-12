@@ -5,6 +5,7 @@ require "rails/test_help"
 module ActiveSupport
   class TestCase
     include FactoryBot::Syntax::Methods
+    include ActiveJob::TestHelper
 
     setup do
       CampaignSend.singleton_class.alias_method(:_original_broadcast_subscribed_views_for, :broadcast_subscribed_views_for) unless CampaignSend.singleton_class.method_defined?(:_original_broadcast_subscribed_views_for)

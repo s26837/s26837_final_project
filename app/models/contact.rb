@@ -9,7 +9,7 @@ class Contact < ApplicationRecord
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :email, uniqueness: { scope: :organization_id, message: "already exists in this organization" }
 
-  before_save :normalize_email
+  before_validation :normalize_email
 
   scope :with_tag, ->(tag) { joins(:tags).where(tags: { id: tag.id }) }
   scope :with_any_tags, ->(tag_ids) { joins(:tags).where(tags: { id: tag_ids }).distinct }

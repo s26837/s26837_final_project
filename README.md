@@ -19,3 +19,6 @@ To check if it works,
 
 Any issues?
 try ``docker compose exec web bin/rails db:migrate`` when the docker container is running, and then try open the page again.
+
+to do tests on the docker container, run
+``docker compose exec web bin/rails test``

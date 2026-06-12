@@ -15,7 +15,7 @@ class Campaign < ApplicationRecord
   validates :status, presence: true, inclusion: { in: %w[draft scheduled sending sent cancelled automated] }
   validate :scheduled_at_in_future, if: -> { scheduled_at.present? && status == 'scheduled' }
 
-  before_create :set_default_status
+  before_validation :set_default_status, on: :create
 
   scope :draft, -> { where(status: 'draft') }
   scope :scheduled, -> { where(status: 'scheduled') }
