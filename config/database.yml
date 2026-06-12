@@ -18,6 +18,7 @@ production:
     database: s26837_project_production
     username: s26837_project
     password: <%= ENV["S26837_PROJECT_DATABASE_PASSWORD"] %>
+    host: <%= ENV.fetch("DB_HOST", "localhost") %>
   cache:
     <<: *primary_production
     database: s26837_project_production_cache
