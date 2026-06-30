@@ -2,6 +2,9 @@ default: &default
   reset_demo_key_usage:
     class: ResetDemoKeyUsageJob
     schedule: "0 0 * * * Europe/Warsaw"
+  process_automations:
+    class: AutomationProcessorJob
+    schedule: every 5 minutes
 
 development:
   <<: *default
