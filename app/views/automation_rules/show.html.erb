@@ -10,7 +10,15 @@
         <div class="mt-4 space-y-2">
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-500">Trigger:</span>
-            <span class="text-sm text-gray-900">When a contact is tagged</span>
+            <% if @rule.time_based? %>
+              <% segment_tag = @organization.tags.find_by(id: @rule.trigger_conditions&.dig('segment_tag_id')) %>
+              <span class="text-sm text-gray-900">
+                When a contact has been inactive for <%= @rule.trigger_conditions&.dig('inactivity_hours') %>h<%= " (limited to tag: #{segment_tag.name})" if segment_tag %>
+              </span>
+            <% else %>
+              <% tag = @organization.tags.find_by(id: @rule.trigger_conditions&.dig('tag_id')) %>
+              <span class="text-sm text-gray-900">When a contact is tagged<%= " #{tag.name}" if tag %></span>
+            <% end %>
           </div>
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-500">Delay:</span>
