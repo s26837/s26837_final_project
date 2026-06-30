@@ -8,7 +8,7 @@ Rails.application.configure do
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
   config.active_storage.service = :local
   config.assume_ssl = true
-  config.force_ssl = true
+  config.force_ssl  = true
   config.log_tags = [ :request_id ]
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
@@ -19,7 +19,7 @@ Rails.application.configure do
   config.solid_queue.connects_to = { database: { writing: :queue } }
   config.action_mailer.default_url_options = {
     host: ENV.fetch("APP_HOST") { URI.parse(ENV.fetch("APP_URL", "https://example.com")).host },
-    protocol: "https"
+    protocol: ENV.fetch("APP_URL", "https://example.com").start_with?("https") ? "https" : "http"
   }
   config.i18n.fallbacks = true
   config.active_record.dump_schema_after_migration = false
