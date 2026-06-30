@@ -79,8 +79,11 @@ class ContactsController < ApplicationController
     if result.success?
       flash[:notice] = "Successfully imported #{result.imported_count} contacts"
       flash[:notice] += " and tagged them as '#{tag_name}'" if tag_name.present?
+      flash[:notice] += ". Skipped #{result.skipped_count} incomplete rows" if result.skipped_count.positive?
     else
-      flash[:alert] = "Imported #{result.imported_count} contacts. Errors: #{result.errors.first(5).join('; ')}"
+      flash[:alert] = "Imported #{result.imported_count} contacts"
+      flash[:alert] += ", skipped #{result.skipped_count} incomplete rows" if result.skipped_count.positive?
+      flash[:alert] += ". Errors: #{result.errors.first(5).join('; ')}"
     end
 
     redirect_to organization_contacts_path(@organization)
