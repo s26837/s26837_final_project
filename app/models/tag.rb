@@ -9,9 +9,14 @@ class Tag < ApplicationRecord
   validates :name, uniqueness: { scope: :organization_id, message: "already exists in this organization" }
   validates :color, format: { with: /\A#[0-9A-F]{6}\z/i, allow_blank: true }
 
-  before_save :normalize_name
+
+  before_validation :normalize_name
 
   scope :by_name, -> { order(:name) }
+
+  def self.normalize_name(value)
+    value.to_s.strip.downcase
+  end
 
   def contacts_count
     contacts.count
@@ -24,6 +29,6 @@ class Tag < ApplicationRecord
   private
 
   def normalize_name
-    self.name = name.strip.downcase if name.present?
+    self.name = self.class.normalize_name(name) if name.present?
   end
 end

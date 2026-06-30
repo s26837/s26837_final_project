@@ -22,7 +22,7 @@ class ContactImporter
   end
 
   def call
-    tag = @organization.tags.find_or_create_by(name: @tag_name) if @tag_name.present?
+    tag = @organization.tags.find_or_create_by(name: Tag.normalize_name(@tag_name)) if @tag_name.present?
 
     imported = 0
     skipped  = 0
@@ -30,9 +30,6 @@ class ContactImporter
 
     @organization.contacts.transaction do
       row_count = 0
-      # Strip surrounding whitespace from header names so columns like
-      # "email, first_name, last_name" (spaces after commas, common from Excel)
-      # still match the expected keys instead of silently being missed.
       header_converters = ->(header) { header&.strip }
 
       each_csv_row(headers: true, header_converters: header_converters) do |row|
